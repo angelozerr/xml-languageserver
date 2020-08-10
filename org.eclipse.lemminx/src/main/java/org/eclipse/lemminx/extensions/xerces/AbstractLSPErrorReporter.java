@@ -20,6 +20,7 @@ import org.apache.xerces.impl.xs.XSMessageFormatter;
 import org.apache.xerces.util.MessageFormatter;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XNIException;
+import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLParseException;
 import org.eclipse.lemminx.commons.BadLocationException;
 import org.eclipse.lemminx.commons.TextDocument;
@@ -60,27 +61,37 @@ public abstract class AbstractLSPErrorReporter extends XMLErrorReporter {
 			Exception exception) throws XNIException {
 		// format message
 		MessageFormatter messageFormatter = getMessageFormatter(domain);
-		String message;
+		String message = null;
 		if (messageFormatter != null) {
 			message = messageFormatter.formatMessage(fLocale, key, arguments);
 		} else {
-			StringBuilder str = new StringBuilder();
-			str.append(domain);
-			str.append('#');
-			str.append(key);
-			int argCount = arguments != null ? arguments.length : 0;
-			if (argCount > 0) {
-				str.append('?');
-				for (int i = 0; i < argCount; i++) {
-					str.append(arguments[i]);
-					if (i < argCount - 1) {
-						str.append('&');
+			if (exception != null) {
+				message = exception.getMessage();
+			}
+			if (message == null) {
+				StringBuilder str = new StringBuilder();
+				str.append(domain);
+				str.append('#');
+				str.append(key);
+				int argCount = arguments != null ? arguments.length : 0;
+				if (argCount > 0) {
+					str.append('?');
+					for (int i = 0; i < argCount; i++) {
+						str.append(arguments[i]);
+						if (i < argCount - 1) {
+							str.append('&');
+						}
 					}
 				}
+				message = str.toString();
 			}
-			message = str.toString();
 		}
 
+		return reportError(location, key, arguments, severity, exception, message);
+	}
+
+	private String reportError(XMLLocator location, String key, Object[] arguments, short severity, Exception exception,
+			String message) {
 		Range adjustedRange = internalToLSPRange(location, key, arguments, xmlDocument);
 
 		if (adjustedRange == null) {
@@ -162,7 +173,6 @@ public abstract class AbstractLSPErrorReporter extends XMLErrorReporter {
 	}
 
 	protected abstract Range toLSPRange(XMLLocator location, String key, Object[] arguments, DOMDocument document);
-	
 
 	/**
 	 * Returns the LSP position from the SAX location.
@@ -181,5 +191,29 @@ public abstract class AbstractLSPErrorReporter extends XMLErrorReporter {
 		} catch (BadLocationException e) {
 			return location != null ? new Position(location.getLineNumber() - 1, location.getColumnNumber() - 1) : null;
 		}
+	}
+
+	@Override
+	public ErrorHandler getSAXErrorHandler() {
+		if (fErrorHandler == null) {
+			fErrorHandler = new XMLErrorHandler() {
+
+				@Override
+				public void warning(String domain, String key, XMLParseException exception) throws XNIException {
+					reportError(domain, key, null, SEVERITY_WARNING, exception);
+				}
+
+				@Override
+				public void fatalError(String domain, String key, XMLParseException exception) throws XNIException {
+					reportError(domain, key, null, SEVERITY_FATAL_ERROR, exception);
+				}
+
+				@Override
+				public void error(String domain, String key, XMLParseException exception) throws XNIException {
+					reportError(domain, key, null, SEVERITY_ERROR, exception);
+				}
+			};
+		}
+		return super.getSAXErrorHandler();
 	}
 }
