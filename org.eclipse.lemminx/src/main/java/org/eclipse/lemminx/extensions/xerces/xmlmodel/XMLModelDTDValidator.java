@@ -29,6 +29,7 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.eclipse.lemminx.extensions.xerces.xmlmodel.msg.XMLModelMessageFormatter;
+import org.xml.sax.XMLReader;
 
 /**
  * XML model validator which process validation with DTD:
@@ -106,7 +107,8 @@ public class XMLModelDTDValidator extends XMLDTDValidator implements XMLModelVal
 				try {
 					fDTDGrammar = (DTDGrammar) loader.loadGrammar(new XMLInputSource(null, eid, null));
 				} catch (Exception e) {
-					// DTD declared in xml-model href="" doesn't exist, report the error and disable the DTD validation.
+					// DTD declared in xml-model href="" doesn't exist, report the error and disable
+					// the DTD validation.
 					fErrorReporter.reportError(locator, XMLModelMessageFormatter.XML_MODEL_DOMAIN, DTD_NOT_FOUND_KEY,
 							new Object[] { element, eid }, XMLErrorReporter.SEVERITY_ERROR);
 					super.fValidation = false;
@@ -138,5 +140,10 @@ public class XMLModelDTDValidator extends XMLDTDValidator implements XMLModelVal
 	public void reset(XMLComponentManager componentManager) throws XMLConfigurationException {
 		entityManager = (XMLEntityManager) componentManager.getProperty(ENTITY_MANAGER);
 		super.reset(componentManager);
+	}
+
+	@Override
+	public void setXMLReader(XMLReader documentHandler) {
+
 	}
 }

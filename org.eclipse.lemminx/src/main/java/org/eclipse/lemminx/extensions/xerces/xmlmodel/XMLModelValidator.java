@@ -14,6 +14,7 @@ package org.eclipse.lemminx.extensions.xerces.xmlmodel;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.parser.XMLComponent;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
+import org.xml.sax.XMLReader;
 
 /**
  * XML model validator API.
@@ -24,5 +25,7 @@ public interface XMLModelValidator extends XMLComponent, XMLDocumentFilter{
 	void setLocator(XMLLocator locator);
 	
 	void setHref(String href);
+
+	void setXMLReader(XMLReader documentHandler);
 
 }
