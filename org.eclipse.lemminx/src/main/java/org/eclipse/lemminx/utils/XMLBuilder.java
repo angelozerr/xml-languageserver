@@ -14,9 +14,12 @@ package org.eclipse.lemminx.utils;
 
 import static org.eclipse.lemminx.utils.StringUtils.normalizeSpace;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.eclipse.lemminx.dom.DOMAttr;
 import org.eclipse.lemminx.dom.DOMComment;
@@ -324,6 +327,121 @@ public class XMLBuilder {
 			}
 		}
 		return this;
+	}
+
+	public XMLBuilder addTextContent(String text, int indentLevel, boolean isMixedContent, boolean isLastChild) {
+		boolean isWhitespaceContent = text.trim().length() == 0;
+		boolean isPreserveEmptyContent = isPreserveEmptyContent();
+		if (isPreserveEmptyContent && !isMixedContent) {
+			append(text);
+		} else {
+			String trimmedText = text.trim();
+			boolean isMultiline = trimmedText.contains("\n") || trimmedText.contains("\r");
+			if (!isWhitespaceContent && isJoinContentLines()) {
+				trimmedText = StringUtils.normalizeSpace(trimmedText);
+				if (isMixedContent) {
+					linefeed();
+					indent(indentLevel);
+				}
+				append(trimmedText);
+				if (isMixedContent) {
+					linefeed();
+					indent(indentLevel + (isMixedContent && !isLastChild ? 0 : -1));
+				}
+			} else if (!isWhitespaceContent && !isMultiline && !isMixedContent) {
+				append(trimmedText);
+			} else if (!isWhitespaceContent) {
+				List<String> lines = splitStringIntoLines(text);
+				if (lines.size() > 0 && lines.get(0).trim().length() == 0) {
+					lines.remove(0);
+				}
+				if (lines.size() > 0 && lines.get(lines.size() - 1).length() == 0) {
+					lines.remove(lines.size() - 1);
+				}
+				if (lines.size() > 0) {
+					lines = removeConsecutiveBlankLines(lines, getPreservedNewlines() + 1);
+				}
+				if (lines.size() > 0) {
+					linefeed();
+					lines.forEach(line -> {
+						if (line.length() > 0) {
+							indent(indentLevel);
+						}
+						append(line);
+						linefeed();
+					});
+					indent(indentLevel + (isMixedContent && !isLastChild ? 0 : -1));
+				}
+			} else if (isMixedContent) {
+				int preservedNewLines = getPreservedNewlines();
+				int newLineCount = StringUtils.getNumberOfNewLines(
+						text,
+						isWhitespaceContent,
+						lineDelimiter,
+						preservedNewLines);
+
+				newLineCount--; // magic
+				for (int i = 0; i < newLineCount; i++) {
+					linefeed();
+				}
+				if (isLastChild) {
+					linefeed();
+					indent(indentLevel - 1);
+				}
+			}
+		}
+		return this;
+	}
+
+	private static List<String> splitStringIntoLines(String text) {
+		List<String> lines = new ArrayList<>();
+		StringBuilder strBuilder = new StringBuilder();
+		for (int i = 0; i < text.length(); i++) {
+			if (text.charAt(i) == '\r') {
+				lines.add(strBuilder.toString());
+				strBuilder = new StringBuilder();
+				if (i + 1 >= text.length()) {
+					break;
+				} else {
+					if (text.charAt(i + 1) == '\n') {
+						i++;
+					}
+				}
+			} else if (text.charAt(i) == '\n') {
+				lines.add(strBuilder.toString());
+				strBuilder = new StringBuilder();
+			} else {
+				strBuilder.append(text.charAt(i));
+			}
+		}
+		lines.add(strBuilder.toString());
+		lines = lines.stream() //
+				.map(str -> str.trim()) //
+				.collect(Collectors.toList());
+		return lines;
+	}
+
+	/**
+	 * TODO: document
+	 * @param lines
+	 * @param allowedConsecutiveBlankLines
+	 * @return
+	 */
+	private static List<String> removeConsecutiveBlankLines(List<String> lines, int allowedConsecutiveBlankLines) {
+		List<String> newLines = new ArrayList<>(lines.size());
+		int currentConsecutiveNewlines = 0;
+		for (int i = 0; i < lines.size(); i++) {
+			if (lines.get(i).length() == 0) {
+				currentConsecutiveNewlines++;
+				if (currentConsecutiveNewlines < allowedConsecutiveBlankLines) {
+					newLines.add(lines.get(i));
+				}
+			} else {
+				currentConsecutiveNewlines = 0;
+				newLines.add(lines.get(i));
+			}
+		}
+		return newLines;
 	}
 
 	public XMLBuilder indent(int level) {
