@@ -81,7 +81,7 @@ class XMLFormatter {
 		/**
 		 * Returns a List containing a single TextEdit, containing the newly formatted
 		 * changes of this.textDocument
-		 * 
+		 *
 		 * @return List containing a single TextEdit
 		 * @throws BadLocationException
 		 */
@@ -345,7 +345,7 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM text node.
-		 * 
+		 *
 		 * @param textNode the DOM text node to format.
 		 */
 		private void formatText(DOMText textNode) {
@@ -360,7 +360,7 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM document type.
-		 * 
+		 *
 		 * @param documentType the DOM document type to format.
 		 */
 		private void formatDocumentType(DOMDocumentType documentType) {
@@ -393,7 +393,7 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM ProcessingIntsruction.
-		 * 
+		 *
 		 * @param element the DOM ProcessingIntsruction to format.
 		 *
 		 */
@@ -406,7 +406,7 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM Comment
-		 * 
+		 *
 		 * @param element the DOM Comment to format.
 		 *
 		 */
@@ -424,9 +424,9 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM CDATA
-		 * 
+		 *
 		 * @param element the DOM CDATA to format.
-		 * 
+		 *
 		 */
 		private void formatCDATA(DOMCDATASection cdata) {
 			this.xmlBuilder.startCDATA();
@@ -439,9 +439,9 @@ class XMLFormatter {
 
 		/**
 		 * Format the given DOM element
-		 * 
+		 *
 		 * @param element the DOM element to format.
-		 * 
+		 *
 		 * @throws BadLocationException
 		 */
 		private void formatElement(DOMElement element) throws BadLocationException {
@@ -506,11 +506,11 @@ class XMLFormatter {
 		/**
 		 * Formats the start tag's closing bracket (>) according to
 		 * {@code XMLFormattingOptions#isPreserveAttrLineBreaks()}
-		 * 
+		 *
 		 * {@code XMLFormattingOptions#isPreserveAttrLineBreaks()}: If true, must add a
 		 * newline + indent before the closing bracket if the last attribute of the
 		 * element and the closing bracket are in different lines.
-		 * 
+		 *
 		 * @param element
 		 * @throws BadLocationException
 		 */
@@ -526,11 +526,11 @@ class XMLFormatter {
 		/**
 		 * Formats the self-closing tag (/>) according to
 		 * {@code XMLFormattingOptions#isPreserveAttrLineBreaks()}
-		 * 
+		 *
 		 * {@code XMLFormattingOptions#isPreserveAttrLineBreaks()}: If true, must add a
 		 * newline + indent before the self-closing tag if the last attribute of the
 		 * element and the closing bracket are in different lines.
-		 * 
+		 *
 		 * @param element
 		 * @throws BadLocationException
 		 */
@@ -576,10 +576,10 @@ class XMLFormatter {
 		/**
 		 * Returns true if first offset and second offset belong in the same line of the
 		 * document
-		 * 
+		 *
 		 * If current formatting is range formatting, the provided offsets must be
 		 * ranged offsets (offsets relative to the formatting range)
-		 * 
+		 *
 		 * @param first  the first offset
 		 * @param second the second offset
 		 * @return true if first offset and second offset belong in the same line of the
@@ -610,7 +610,7 @@ class XMLFormatter {
 		/**
 		 * Returns true if the provided element has one attribute in the fullDomDocument
 		 * (not the rangeDomDocument)
-		 * 
+		 *
 		 * @param element
 		 * @return true if the provided element has one attribute in the fullDomDocument
 		 *         (not the rangeDomDocument)
@@ -622,7 +622,7 @@ class XMLFormatter {
 
 		/**
 		 * Return the option to use to generate empty elements.
-		 * 
+		 *
 		 * @param element the DOM element
 		 * @return the option to use to generate empty elements.
 		 */
@@ -748,6 +748,10 @@ class XMLFormatter {
 			// check if format range reaches the end of the document
 			if (this.endOffset == this.textDocument.getText().length()) {
 
+				if (this.sharedSettings.getFormattingSettings().isTrimTrailingWhitespace()) {
+					this.xmlBuilder.trimFinalWhitespace();
+				}
+
 				if (this.sharedSettings.getFormattingSettings().isTrimFinalNewlines()) {
 					this.xmlBuilder.trimFinalNewlines();
 				}
@@ -808,7 +812,7 @@ class XMLFormatter {
 	/**
 	 * Returns a List containing a single TextEdit, containing the newly formatted
 	 * changes of the document.
-	 * 
+	 *
 	 * @param textDocument   document to perform formatting on
 	 * @param range          specified range in which formatting will be done
 	 * @param sharedSettings settings containing formatting preferences
@@ -827,7 +831,7 @@ class XMLFormatter {
 
 	/**
 	 * Returns list of {@link IFormatterParticipant}.
-	 * 
+	 *
 	 * @return list of {@link IFormatterParticipant}.
 	 */
 	private Collection<IFormatterParticipant> getFormatterParticipants() {
